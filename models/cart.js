@@ -8,7 +8,6 @@ const p = path.join(
 );
 
 module.exports = class Cart {
-
   static addProduct(id, productPrice) {
     // Fetch the previous cart
     fs.readFile(p, (err, fileContent) => {
@@ -39,35 +38,37 @@ module.exports = class Cart {
     });
   }
 
-  static deleteProduct(id,productPrice){
-    fs.readFile(p,(err,fileContent) =>{
-      if(err){
+  static deleteProduct(id, productPrice) {
+    fs.readFile(p, (err, fileContent) => {
+      if (err) {
         return;
       }
-      const updatedCart = {...JSON.parse(fileContent)};
-      const product = updatedCart.products.find(p => p.id === id);
+      const updatedCart = { ...JSON.parse(fileContent) };
+      const product = updatedCart.products.find(prod => prod.id === id);
+      if (!product) {
+          return;
+      }
       const productQty = product.qty;
-      updatedCart.products = updatedCart.products.filter(p=>p.id !== id );
-      updatedCart.totalPrice = updatedCart.totalPrice - productPrice* productQty;
+      updatedCart.products = updatedCart.products.filter(
+        prod => prod.id !== id
+      );
+      updatedCart.totalPrice =
+        updatedCart.totalPrice - productPrice * productQty;
 
-      fs.writeFile(p,JSON.stringify(updatedCart),err => {
+      fs.writeFile(p, JSON.stringify(updatedCart), err => {
         console.log(err);
       });
-
     });
   }
 
-  static getCart(cb){
-    fs.readFile(p,(err,fileContent) => {
+  static getCart(cb) {
+    fs.readFile(p, (err, fileContent) => {
       const cart = JSON.parse(fileContent);
-      if(err){
+      if (err) {
         cb(null);
-      }else{
+      } else {
         cb(cart);
       }
     });
   }
-    
-  
-  
-}
+};

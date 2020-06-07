@@ -1,6 +1,5 @@
 const Product = require('../models/product');
 
-//rendering add-product 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
@@ -21,42 +20,39 @@ exports.postAddProduct = (req, res, next) => {
 
 exports.getEditProduct = (req, res, next) => {
   const editMode = req.query.edit;
-  if(!editMode){
+  if (!editMode) {
     return res.redirect('/');
   }
-  prodId = req.params.productId;
+  const prodId = req.params.productId;
   Product.findById(prodId, product => {
-    if(!product){
-      return res.redirect('/')
+    if (!product) {
+      return res.redirect('/');
     }
     res.render('admin/edit-product', {
-      pageTitle: 'Add Product',
+      pageTitle: 'Edit Product',
       path: '/admin/edit-product',
       editing: editMode,
       product: product
     });
-  })
-  
+  });
 };
 
-//populating the editing form
 exports.postEditProduct = (req, res, next) => {
   const prodId = req.body.productId;
   const updatedTitle = req.body.title;
   const updatedPrice = req.body.price;
   const updatedImageUrl = req.body.imageUrl;
-  const updatedDescription = req.body.description;
+  const updatedDesc = req.body.description;
   const updatedProduct = new Product(
     prodId,
     updatedTitle,
     updatedImageUrl,
-    updatedDescription,
+    updatedDesc,
     updatedPrice
   );
   updatedProduct.save();
   res.redirect('/admin/products');
-
-}
+};
 
 exports.getProducts = (req, res, next) => {
   Product.fetchAll(products => {
@@ -68,8 +64,8 @@ exports.getProducts = (req, res, next) => {
   });
 };
 
-exports.postDeleteProduct = (req,res,next) => {
+exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
   Product.deleteById(prodId);
   res.redirect('/admin/products');
-}
+};
