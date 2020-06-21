@@ -7,7 +7,7 @@ const app = express();
 
 const mongoose = require('mongoose');
 
-const mongoConnect = require('./util/database').mongoConnect;
+
 
 
 
@@ -28,14 +28,15 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req,res,next) => {
-  User.findById('5eeadc139313c1d6f12c66ee')
+  User.findById('5eedf9aa10b1613f542a8745')
     .then(user => {
-      req.user = new User(user.name,user.email,user.cart,user._id);
+      req.user = user;
       next();
     })
-    .catch(err => console.log(err));
- 
+    .catch(err => {console.log(err)});
+
 });
+
 
 //Applying middleware for route
 //For admin all the subroutes will begin after /admin
@@ -46,7 +47,26 @@ app.use(shopRoutes);
 
 app.use(errorController.get404)
 
-mongoConnect(()=> {
-  
+mongoose.connect(
+'mongodb+srv://dixittarun81:govind2607@cluster0-uk5n8.mongodb.net/shop?retryWrites=true&w=majority'
+)
+.then(result => {
+  User.findOne().then(user => {
+    if(!user){
+      const user = new User({
+        name: 'tarun',
+        email: 'tarun@test.com',
+        cart: {
+          item: []
+        }
+      });
+      user.save();
+    }
+  });
   app.listen(3001);
-});
+
+})
+.catch(err => {
+  console.log(error)
+})
+
