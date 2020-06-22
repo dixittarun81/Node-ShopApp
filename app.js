@@ -1,72 +1,73 @@
 const path = require('path');
 
-//Setting up express server
 const express = require('express');
-const bodyParser = require('body-parser');//for parsing chunk of streams
-const app = express();
-
+const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
 
-
-
-
-
-//Setting up view engine
-app.set('view engine', 'ejs');
-app.set('views', 'views');
-
-
-const adminRoutes = require('./routes/admin');
-const shopRoutes = require('./routes/shop');
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
+const MONGODB_URI = 'mongodb+srv://dixittarun81:govind2607@cluster0-uk5n8.mongodb.net/shop';
+
+const app = express();
+
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: 'sessions'
+});
+
+app.set('view engine', 'ejs');
+app.set('views', 'views');
+
+const adminRoutes = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
+const authRoutes = require('./routes/auth');
 
 app.use(bodyParser.urlencoded({ extended: false }));
-
-//serving static files
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(
+  session({secret: 'my secret',resave: false, saveUninitialized: false, store:store})
+)
 
-app.use((req,res,next) => {
-  User.findById('5eedf9aa10b1613f542a8745')
+app.use((req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
     .then(user => {
       req.user = user;
       next();
     })
-    .catch(err => {console.log(err)});
-
+    .catch(err => console.log(err));
 });
 
-
-//Applying middleware for route
-//For admin all the subroutes will begin after /admin
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 
+app.use(errorController.get404);
 
-
-app.use(errorController.get404)
-
-mongoose.connect(
-'mongodb+srv://dixittarun81:govind2607@cluster0-uk5n8.mongodb.net/shop?retryWrites=true&w=majority'
-)
-.then(result => {
-  User.findOne().then(user => {
-    if(!user){
-      const user = new User({
-        name: 'tarun',
-        email: 'tarun@test.com',
-        cart: {
-          item: []
-        }
-      });
-      user.save();
-    }
+mongoose
+  .connect(
+    MONGODB_URI
+  )
+  .then(result => {
+    User.findOne().then(user => {
+      if (!user) {
+        const user = new User({
+          name: 'tarun',
+          email: 'tarun@test.com',
+          cart: {
+            items: []
+          }
+        });
+        user.save();
+      }
+    });
+    app.listen(3001);
+  })
+  .catch(err => {
+    console.log(err);
   });
-  app.listen(3001);
-
-})
-.catch(err => {
-  console.log(error)
-})
-
